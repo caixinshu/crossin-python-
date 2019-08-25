@@ -1,1 +1,17 @@
+import requests
 
+while True:
+    city = input('请输入您想要查询的城市：\n')
+    try:
+        if city:
+            re = requests.get('http://wthrcdn.etouch.cn/weather_mini?city={}'.format(city))
+            result = re.json()
+            print(result['data']['forecast'][0]['date'])
+            print(result['data']['forecast'][0]['high'])
+            print(result['data']['forecast'][0]['low'])
+            print(result['data']['forecast'][0]['type'])
+            print(result['data']['ganmao'])      
+        else:
+            break
+    except:
+        print('未查询到有效数据')
