@@ -1,0 +1,99 @@
+import requests
+
+re = requests.get('https://api.douban.com/v2/movie/1292052?apikey=0df993c66c0c636e29ecbb5344252a4a')
+result = re.json()
+image_url = result['image']
+pic = requests.get(image_url).content
+with open('E:\\a.jpg','wb') as f:
+    f.write(pic)
+##################
+import requests
+import csv
+import time
+
+l1 = []
+for j in range(0,10):
+    re = requests.get('https://api.douban.com/v2/movie/top250?start={}&apikey=0df993c66c0c636e29ecbb5344252a4a'.format(j))
+    time.sleep(2)
+    for i in range(0,20):  
+        result = re.json()['subjects'][i]
+        l = []
+        l.append(result['title'])
+        l.append(result['rating']['average'])
+        l.append(result['casts'][0]['name'])
+        l.append(result['images']['small'])
+        l1.append(l)
+        
+# print(l1[-1])
+with open('E:\\test.csv','a+',newline='') as f:
+    w = csv.writer(f)
+    w.writerow(["电影","评分","主演","图片"])
+    w.writerows(l1)
+    --------------------------分割线（另一种思路）-----------------------------------
+    
+    # 2.1 图片下载 - 豆瓣海报
+import requests as rs
+import csv, time
+
+# 下载图片并保存在当前文件夹，两个参数分别是 图片链接 和 图片名
+def download_image(pic_url, name):
+    req = rs.get(pic_url)  # 去请求这个图片的 url，请求成功会返回该图片
+    pic_data = req.content  # 图片是非文本格式数据，对于非文本请求：用 content 属性返回二进制结果
+
+    # 当前路径下，打开 .jpg 并写入，参数 'wb' 中，'w' 是写入，'b' 说明写入的格式是二进制格式
+    with open(name + '.jpg', 'wb') as f:
+        f.write(pic_data)
+    print(pic_url, '下载成功')
+##############################
+
+url = 'https://api.douban.com/v2/movie/1292052?apikey=0df993c66c0c636e29ecbb5344252a4a'  # 豆瓣 api 的 url，必须有 apikey 才能返回有效数据
+req = rs.get(url)  # 利用豆瓣 api 获取豆瓣一部电影的信息
+data = req.json()
+pic_url = data.get('image')  # 通过字典的 get 方法去获取键 image 对应的值（值就是这个图片的 url）
+
+if pic_url:  # 如果图片地址存在
+    download_image(pic_url, 'poster1')  # 调用下载图片的函数
+else:
+    print('请求图片地址不存在')
+
+##########################################
+# 以下是下载豆瓣电影 top 250 并保存 csv 的代码
+def top_250(start=0):
+    results = [] # 用一个列表记录所有抓取的数据
+    
+    while start < 250: # 抓取的 url 一次返回 20 条数据，start 是抓取的开始条目，如果小于 250，就继续循环抓取，直到抓取 250 条数据为止
+        url = 'https://api.douban.com/v2/movie/top250?start=%d&apikey=0df993c66c0c636e29ecbb5344252a4a' % start # 用字符串的格式化拼接 url
+        req = rs.get(url) # 请求对应 url 的 json 格式数据
+        time.sleep(2) # 限制访问网站的请求频率
+        data = req.json()
+        
+        start = int(data['start']) + int(data['count']) # 把开始的条目进行更新，下次请求的 url 也改变了
+
+        with open('douban.csv', 'a') as f: # 打开 douban.csv 并追加写入
+            f_csv = csv.writer(f) # 将文件对象作为参数传给csv.writer()
+            for item in data['subjects']: # 遍历250部电影
+                # item['casts'] 是个列表，每一项都是一名主演的相关信息，其中 name 是演员名。join 方法将列表转换成字符串
+                casts = ','.join([c['name'] for c in item['casts']])
+
+                line = [item['id'], item['title'], item['rating']['average'], casts, item['images']['large']] # 把各项信息组成列表，用于写入 csv
+                results.append(line) # 将结果保存在一个列表
+                f_csv.writerow(line) # 一次写入一行信息
+                
+        print('请求完成：', url)
+
+    return results # 返回请求结果
+
+
+results = top_250(0) # 调用函数，获得 top 250 的一个列表
+# print(results)
+
+# 循环遍历 results，下载每一部电影的图片
+for i in results:
+    url_image = i[-1]  # 图片链接是最后一项
+    name = i[0]  # 用电影id做图片名
+
+    print('正在下载：', url_image)
+
+    download_image(url_image, name)
+
+    time.sleep(2)  # 限制访问网站的请求频率
