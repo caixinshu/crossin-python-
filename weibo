@@ -1,0 +1,10 @@
+import requests
+
+url = "https://weibo.com/a/hot/realtime"
+headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36 QIHU 360SE",
+            "Cookie":"SINAGLOBAL=5637188964906.525.1535024633283; ULV=1565696402515:18:2:1:2155088305277.5994.1565696402506:1564653591492; UOR=www.xiaoji001.com,widget.weibo.com,seal.kunlun.com; crossidccode=CODE-gz-1I3XKf-24GR1j-OcidvgiFuro22LUf764e1; ALF=1598772266; SSOLoginState=1567236266; SCF=Av7U5bIztJVLXUUw1DHLS2YoAUzAnovWEve4JeDQoLEHTdnYsjclLF6HzlUZ2ZH0zfVuYxXE_RT32VVYT4WIUlM.; SUB=_2A25wblD7DeRhGeNL7VsR9yvIyz-IHXVTGsUzrDV8PUNbmtBeLVnzkW9NSOXXhWgNxCHppSmm3Vx-Ax4M2ZvEQn5D; SUBP=0033WrSXqPxfM725Ws9jqgMF55529P9D9W5Fxf.mgiXw4AAYHUmFWs8o5JpX5KzhUgL.Fo-fSo.7S0-Xehe2dJLoIpqLxKnLBoMLB-qLxKBLB.2LB.8keK57; SUHB=0z1Acpy8rMhs1s; wvr=6"
+        }
+re = requests.get(url=url,headers=headers)
+with open('E:\\weibo.html','w',encoding='utf8',errors='ignore') as f:
+    f.write(re.text)
+    
