@@ -1,0 +1,55 @@
+import requests
+import csv
+
+url = "https://www.zhihu.com/api/v3/feed/topstory/recommend?" 
+params = {"session_token":"9afd8e821130400cd47a641cee82a493","desktop":"true","page_number":2,"limit":6,"action":"down","after_id":5}
+headers = {"user-agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36",
+          "cookie":'_zap=376c470e-f200-478e-803e-2ed6545df385; d_c0="AIBkc1JPAg6PTjTm1PM3xdi5CGcjq2VZHbg=|1533453180"; q_c1=d81d27f605494edba79bd075dbab7d50|1533453181000|1533453181000; _xsrf=tdxRDSEUrvgKVJ5VgVpBl4jsuUAKexto; z_c0=Mi4xSGIyOUFnQUFBQUFBZ0dSelVrOENEaGNBQUFCaEFsVk5Ra0lUWGdEMDFyRnlvRUhJMWM2dDBELUdUWWU2T3B6a3Zn|1562768450|680f58ed831733040548150d721a29d62e62423e; tst=r; tgw_l7_route=a37704a413efa26cf3f23813004f1a3b; unlock_ticket="AACAgMIumQkXAAAAYQJVTQjzcF0IoxkwAfSTwanf2VfoRfufxosK1w=="'}
+'''page_number 为2时,after_id为5.
+   page_number 为3时,after_id为11
+   page_number 为4时,after_id为17
+page_number +1  after_id +6
+'''
+def get_data():
+    '''获取知乎数据'''
+    try:
+        re = requests.get(url=url,headers=headers,params=params
+    except error as e:
+        print('Not Found')
+    else:
+        re_json = re.json() 
+        data = re_json.get('data') 
+        return data
+
+def get_question(item):
+    '''获取数据，存在字典里，再将字典添加到列表'''
+    question_list = []
+    for i in range(len(item)):
+        question_dic = {}
+        try:
+            question_dic['分类'] = item[i].get('action_text')
+            question_dic['标题'] = item[i]['target']['question']['title']
+            question_dic['作者'] = item[i]['target']['question']['author']['name']
+            question_dic['链接'] =  url + '/question/{q_id}/answer/{t_id}'.format(q_id=item[i]['target']['question']['id'],
+                                                                                    t_id=item[i]['target']['id'])
+        except:
+            continue          
+        question_list.append(question_dic)
+    return question_list
+
+def write_csv(datas):
+    '''使用csv的字典写入方法'''
+    with open('E:\\test.csv','w+',newline='') as csv_file:
+        headers = [k for k in datas[0]]
+        writer = csv.DictWriter(csv_file, fieldnames=headers)
+        writer.writeheader()
+        for data in datas:
+            writer.writerow(data)
+
+            
+def run():
+    item = get_data()
+    questions = get_question(item)
+    write_csv(questions)
+        
+run()
