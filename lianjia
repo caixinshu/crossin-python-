@@ -1,0 +1,83 @@
+import requests
+from bs4 import BeautifulSoup
+import csv
+import re
+
+# url = "https://sz.lianjia.com/zufang/pg1/"
+# headers = {
+#     "User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36",
+#     "Cookie":"lianjia_ssid=f1b67a91-76f0-4d24-b117-dd440aab4157; lianjia_uuid=0c1b795d-9a86-47dd-834c-4d866954ac67; _smt_uid=5d7498ce.278672c6; UM_distinctid=16d0f74e8b6569-072ce0e0b4b117-3c604504-1fa400-16d0f74e8b75a6; _jzqa=1.3665621329773736400.1567922383.1567922383.1567922383.1; _jzqc=1; _jzqx=1.1567922383.1567922383.1.jzqsr=sh%2Elianjia%2Ecom|jzqct=/zufang/.-; _jzqckmp=1; sajssdk_2015_cross_new_user=1; sensorsdata2015jssdkcross=%7B%22distinct_id%22%3A%2216d0f74ea3a49-054a0f48188286-3c604504-2073600-16d0f74ea3b68b%22%2C%22%24device_id%22%3A%2216d0f74ea3a49-054a0f48188286-3c604504-2073600-16d0f74ea3b68b%22%2C%22props%22%3A%7B%7D%7D; _ga=GA1.2.1243086225.1567922385; _gid=GA1.2.1378115977.1567922385; select_city=440300; all-lj=8e5e63e6fe0f3d027511a4242126e9cc; _qzja=1.1719542692.1567922387162.1567922387162.1567922387162.1567922387162.1567922387162.0.0.0.1.1; _qzjc=1; _qzjto=1.1.0; CNZZDATA1255849469=1341305983-1567920839-https%253A%252F%252Fwww.lianjia.com%252F%7C1567920839; CNZZDATA1254525948=212844720-1567921767-https%253A%252F%252Fwww.lianjia.com%252F%7C1567921767; CNZZDATA1255633284=1262427498-1567917707-https%253A%252F%252Fwww.lianjia.com%252F%7C1567917707; CNZZDATA1255604082=2115658387-1567922360-https%253A%252F%252Fwww.lianjia.com%252F%7C1567922360; srcid=eyJ0Ijoie1wiZGF0YVwiOlwiMmYzNTI1NWIwMDgzMzJmMWQxYWFhZDRjZDA0NTRkMWViOTdmYmU5ZGE2ZWYyMjI2NDM2YWVhOGNlYzdlZjVjODZhOGY5NTk5ODQzYTdjZGU5N2RmMTZiNGU3YjdlOWQ3YmVhNmE1OGQ0ZTJkMzQ0YWNmNzQ3NTNhNDA5MjZiYjMyN2YyN2JiZjM2MzY1OTJmYTJkYzVjMTg4ZTZmMWI3ZTg3NmFmZjFkMjgzY2QwZGRiMWVmY2Y1OWI5YWE0ZTg4ZTFmNTRkZmM4YWVkNjlmNTI3OTA5MWQ4NWU0MTc4OGVkMDI1NGYzZDgxYzFmODZhNGYzMTQ0Mjk4ZjZjNjYxNDcwZWQ3MTc3YjZjZDgyYmIzODVhNDg2MzAwYWJiMDA1MWMxZTJlOGUzM2QyYWQ1ZjliMDdjZmRiMzBkN2MxNDQ3Yzc1YmFmNTc5ZWFkMWI1YTlhYzc3NzEzMGRmYTQ1NVwiLFwia2V5X2lkXCI6XCIxXCIsXCJzaWduXCI6XCI4MWFlNWU4MFwifSIsInIiOiJodHRwczovL3N6LmxpYW5qaWEuY29tL3p1ZmFuZy9wZzEvIiwib3MiOiJ3ZWIiLCJ2IjoiMC4xIn0=",
+
+# }
+
+path= "C:/Users/Administrator/Desktop/lianjia.html"
+html = open(path, 'r', encoding='utf-8')
+html_doc = html.read()
+soup = BeautifulSoup(html_doc,'lxml')
+
+list_1 = soup.find_all('div',class_ ="content__list--item--main")
+dics_list = []
+
+for i in list_1:
+    house_desInfo = i.find("p", "content__list--item--des").get_text()
+    house_url = i.find('a').get('href')   
+     
+    house_desInfo = re.split('\n', house_desInfo)
+        # 去掉 空字符 以及 '/'
+    house_desInfo = [x.replace('/', '').strip() for x in house_desInfo if x.replace('/', '').strip() != '']
+    house_address = house_desInfo[0]
+    house_area = house_desInfo[1]
+    house_direct = house_desInfo[2]
+    house_type = house_desInfo[3]
+    house_floor = house_desInfo[4].replace(' ', '')
+    house_rental = i.find("em").get_text()
+    tmp = [house_address, house_area, house_direct, house_type, house_floor, house_rental,house_url]
+    dics_list.append(tmp)
+    
+    
+header = ['位置', '面积', '朝向', '户型', '楼层', '价格', '详情']
+with open('E:\\test.csv','w+',newline='') as f:
+    w = csv.writer(f)
+    w.writerow(header)
+    w.writerows(dics_list)
+    
+    
+  ====================分割线==================
+  
+  # 5 页面信息提取 - 链家租房
+
+import requests as rs
+from bs4 import BeautifulSoup as bs
+import csv
+
+url = 'https://sh.lianjia.com/zufang/'
+h = {
+    'user-agent':'chrome',
+}
+
+req = rs.get(url,headers=h) # 抓取 链家租房 上海房源情况
+d = req.text
+
+soup = bs(d, 'lxml')  # 初始化一个 BeautifulSoup 对象
+
+# 寻找所有类为 content__list--item--main 的元素,返回的是一个列表，每一项是一个房屋的所有信息
+items = soup.find_all(class_='content__list--item--main')
+
+with open('lianjia.csv', 'w', encoding='utf-8') as f:  # 准备写入数据
+    f_csv = csv.writer(f)
+
+    for i in items:  # 遍历这个列表
+        ps = i.find_all('p')  # 找 i 中所有的 p 元素，每一个 p 元素里都有该房源不同的信息
+        # print(ps)
+
+        title = ps[0].a.text.strip()  # 第一个 p 元素是标题，如：整租·龙柏二村 2室1厅 南
+        link = ps[0].a.get('href')  # 房源详细页的链接
+        attrs = [a.strip() for a in ps[1].text.split('/')]  # 详细数据，包括位置、面积、朝向和户型
+        tags = ','.join([a.text for a in ps[4].find_all('i')])  # 标签，包括精装、随时看房等
+
+        line = [title, link]  # 组合成列表，用于之后保存成 csv
+        line.extend(attrs)  # 列表 extend 数据
+        line.append(tags)  # 增加标签
+        f_csv.writerow(line)
+
+print('写入完成')
