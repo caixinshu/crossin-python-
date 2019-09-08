@@ -53,3 +53,59 @@ def run():
     write_csv(questions)
         
 run()
+
+==========================分割线===============================
+
+
+# 4 需登录的网站 - 知乎时间线
+import requests as rs
+import time, csv
+
+# 通过 Chrome 开发者工具的 network 找到 'https://www.zhihu.com/api/v3/feed/topstory/recommend?session_token' 的链接
+# 这个链接是动态的，每个人的链接不一样
+url = 'https://www.zhihu.com/api/v3/feed/topstory/recommend?session_token=f5556971c835fd64a90d27aeba900096&desktop=true&page_number=3&limit=6&action=down&after_id=11'
+
+# 登录知乎以后获得 cookie，将 cookie 复制下来保存在此处用于之后的请求
+h = {
+    'user-agent': 'chrome',
+    # 注意：这里 cookie 不是真实的，真实的 cookie 需要你通过 chrome 开发者工具，从要抓取的网页复制过来
+    'cookie': '...................._ga=GA1.2.2047845615.1493178880; 899.127;.........................'
+}
+
+req = rs.get(url, headers=h)
+data_total = req.json()
+data_items = data_total['data']  # 时间线的数据列表
+
+with open('zhihu_timeline.csv', 'w', encoding='utf-8') as f:  # 打开 zhihu_timeline.csv 并追加写入
+    f_csv = csv.writer(f)  # 将文件对象作为参数传给csv.writer()
+
+    for item in data_items:
+        target = item['target']
+        target_type = target['type']
+        # print(target_type)
+
+        if target_type == 'answer':
+            question = target['question']
+
+            line = [
+                'answer', item.get('id'), item.get('action_text'),  # 类型，总 id，关键词
+                target.get('id'), target.get('voteup_count'), target.get('comment_count'),  # 回答 id，回答点赞数，回答评论数
+                target.get('thanks_count'), target.get('visited_count'), target.get('created_time'),
+                # 回答感谢数，回答观看数，回答创建时间
+                question.get('id'), question.get('title'), question.get('answer_count'),  # 问题id，问题题目，问题回答数
+                question.get('follower_count'), question.get('comment_count'), question.get('created')  # 问题关注数，评论数，创建时间
+            ]
+        elif target_type == 'article':
+            line = [
+                'article', item.get('id'), item.get('action_text'),  # 类型，总 id，关键词
+                target.get('id'), target.get('voteup_count'), target.get('comment_count'),  # 文章 id，文章点赞数，文章评论数
+                target.get('title'), target.get('visited_count'), target.get('created'), # 文章题目（文章没有感谢数），文章观看数，文章创建时间
+            ]
+        else:
+            continue
+
+        # print(line)
+
+        f_csv.writerow(line)  # 一次写入一行信息
+
+print('写入完成')
