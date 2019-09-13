@@ -1,0 +1,136 @@
+import requests
+from bs4 import BeautifulSoup
+import csv
+
+def get_data(): 
+    url = 'https://jobs.zhaopin.com/CZ739806840J00377931401.htm'
+    headers = {
+        'cookie':'x-zp-client-id=e17d1b59-aa3f-487f-84fc-cba95ed60c03; sts_deviceid=16d1b0cc111134-0453d9237a9f6e-3c604504-2073600-16d1b0cc11263a; dywez=95841923.1568116884.1.1.dywecsr=crossincode.com|dyweccn=(referral)|dywecmd=referral|dywectr=undefined|dywecct=/vip/homework/30/; __utmz=269921210.1568116885.1.1.utmcsr=crossincode.com|utmccn=(referral)|utmcmd=referral|utmcct=/vip/homework/30/; acw_tc=276082a415681168835291008e63f89cc17321f56cf0ab5ae19cf3f0965845; sou_experiment=unexperiment; LastCity=%E6%B7%B1%E5%9C%B3; LastCity%5Fid=765; ZP_OLD_FLAG=false; POSSPORTLOGIN=3; CANCELALL=1; urlfrom=121126445; urlfrom2=121126445; adfcid=none; adfcid2=none; adfbid=0; adfbid2=0; dywea=95841923.246724922337323520.1568116884.1568116884.1568359092.2; dywec=95841923; Hm_lvt_38ba284938d5eddca645bb5e02a02006=1568116885,1568359092; __utma=269921210.284568491.1568116885.1568116885.1568359092.2; __utmc=269921210; __utmt=1; _jzqa=1.1839914628837973800.1568359092.1568359092.1568359092.1; _jzqc=1; _jzqckmp=1; _jzqb=1.1.10.1568359092.1; sensorsdata2015jssdkcross=%7B%22distinct_id%22%3A%2216d1b0cc11b1f1-0bd1d5dd1bdbf3-3c604504-2073600-16d1b0cc11c499%22%2C%22%24device_id%22%3A%2216d1b0cc11b1f1-0bd1d5dd1bdbf3-3c604504-2073600-16d1b0cc11c499%22%2C%22props%22%3A%7B%22%24latest_traffic_source_type%22%3A%22%E7%9B%B4%E6%8E%A5%E6%B5%81%E9%87%8F%22%2C%22%24latest_referrer%22%3A%22%22%2C%22%24latest_referrer_host%22%3A%22%22%2C%22%24latest_search_keyword%22%3A%22%E6%9C%AA%E5%8F%96%E5%88%B0%E5%80%BC_%E7%9B%B4%E6%8E%A5%E6%89%93%E5%BC%80%22%7D%7D; dyweb=95841923.2.10.1568359092; __utmb=269921210.2.10.1568359092; sts_sg=1; sts_sid=16d297caac75a3-006d8a07a125cb-3c604504-2073600-16d297caac8649; sts_chnlsid=Unknown; jobRiskWarning=true; zp_src_url=https%3A%2F%2Fwww.zhaopin.com%2F; Hm_lpvt_38ba284938d5eddca645bb5e02a02006=1568359104; ZL_REPORT_GLOBAL={%22sou%22:{%22actionid%22:%22ce9b359e-a8e4-4aed-baef-32adc23700e0-sou%22%2C%22funczone%22:%22smart_matching%22}}; sts_evtseq=5',
+        'user-agent':'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
+    }
+    re = requests.get(url=url,headers=headers)
+    return re
+
+def json_data(data):
+    
+    results = data.json()['data']['results']
+    result_lists = []
+    for i in results:
+        result_list = []
+        try:
+            jobname = results[i]['jobName']
+            companyname = results[i]['company']['name']
+            size = results[i]['size']['name']
+            city = results[i]['city']['display']
+            salary = results[i]['salary']
+            edulevel = results[i]['eduLevel']['name']
+            workingexp = results[i]['workingExp']
+            positionURL = results[i]['positionURL']
+            
+            result_list.append(jobname)
+            result_list.append(companyname)
+            result_list.append(size)
+            result_list.append(city)
+            result_list.append(salary)
+            result_list.append(edulevel)
+            result_list.append(workingexp)
+            result_list.append(positionURL)
+                        
+            def bs_data(url):
+                res = get_data(positionURL)
+                soup = BeautifulSoup(res.text)
+                results = soup.find_all('span',class_='s1')
+                duty_list = []
+                for i in results:
+                    result_list.append(i.get_text())
+                    
+                l= ''.join(duty_list)
+                return l
+            
+            result_list.append(l)            
+        except:
+            print('error')
+            
+    result_lists.append(result_list)        
+    return result_lists
+        
+            
+def write_data(data):
+    
+    header = ['工作名称', '公司名称', '规模', '城市', '薪资', '学历要求', '工作经验', 'url', '岗位职责']
+    with open('E:\\test.csv','w+',newline='') as f:
+        w = csv.writer(f)
+        w.writerow(header)
+        w.writerows(data)
+
+def run():
+    results = get_data()
+    datas = json_data(results)
+    write_data(datas)
+    print('=====End=====')
+    
+run()
+
+======================分割========================
+
+# 分步抓取 - 智联招聘职位
+import requests as rs
+from bs4 import BeautifulSoup as bs
+import csv, time
+
+h = {
+    'user-agent': 'chrome',
+    # 注意：这里 cookie 不是真实的，真实的 cookie 需要你通过 chrome 开发者工具，从要抓取的网页复制过来
+    'cookie': '.....................x-zp-client-id=d6e2.................................'
+}
+
+# 1 抓列表页
+with open('zhaopin.csv', 'w', encoding='utf-8') as f:
+    f_csv = csv.writer(f)
+
+    for i in range(3):  # 我这里抓了3次，可以把 3 改成自己需要的次数
+        url = 'https://fe-api.zhaopin.com/c/i/sou?start=%d&pageSize=90&cityId=538&salary=0,0&workExperience=-1&education=-1&companyType=-1&employmentType=-1&jobWelfareTag=-1&kw=Python&kt=&=0&_v=0.14883524&x-zp-page-request-id=a28ccefbd24f45369207b0cf766b2ca3-1564934389270-251884&x-zp-client-id=d6e24541-3db4-4ef2-8036-8914015e60b2' % (
+                i * 90)  # 智联网页中数据是异步的,需要通过 Chrome 开发者工具找到传递数据的 url ,接着去请求这个 url
+
+        req = rs.get(url, headers=h)  # 请求时,需要加上必要的headers参数
+        data = req.json()
+        # print(data)
+        items = data['data']['results']  # 数据都在 data 的 results 中，是一个列表，每一项是一个招聘信息
+
+        time.sleep(2)  # 限制频率
+
+        for item in items:  # 遍历招聘列表
+
+            title = item['jobName']  # 招聘关键词
+            salary = item['salary']  # 薪水
+            edu = item['eduLevel']['name']  # 学历要求
+            exp = item['workingExp']['name']  # 工作经验要求
+            link = item['positionURL']  # 详细页url
+            emplType = item['emplType']  # 是否全职
+            company = item['company']
+            company_name = company['name']  # 公司名
+            company_type = company['type']['name']  # 公司类型
+            company_size = company['size']['name']  # 公司规模
+
+            # 2 抓详细页
+            try:
+                req2 = rs.get(link, headers=h)
+                soup = bs(req2.text, 'lxml')
+                detail = soup.find(class_='describtion__detail-content').text  # 从详细页获得职位要求
+                time.sleep(2)  # 限制抓详细页的频率
+            except:
+                print('detail error')
+                detail = ''
+
+            # 把一个公司的所有信息组成一个列表
+            line = [title, salary, edu, exp, link, emplType, company_name, company_type, company_size, detail]
+
+            f_csv.writerow(line)
+            print(title)
+print('写入完成')
+
+
+
+
+
+
